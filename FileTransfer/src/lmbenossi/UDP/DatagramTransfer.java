@@ -1,24 +1,24 @@
-package lmbenossi.FileTransfer;
+package lmbenossi.UDP;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.SocketAddress;
 
-public class TransferPeer {
+public class DatagramTransfer {
 	private enum SocketState{
 		CLOSED, LISTEN, READY, SYN_SENT, RES_SENT;
 	}
 	
-	private DatagramSocket socket;
+	private DatagramObjectSocket socket;
 	private SocketAddress peerAddress;
 	private SocketState state;
 	private int seq = 0;
 	private ReceiveThread receiveThread;
 	private SendThread sendThread;
 	private PacketQueue queue;
+	int timeout = 2000;
+	int tries = 3;
 	
-	public TransferPeer(int port) throws Exception {
-		socket = new DatagramSocket(port);
+	public DatagramTransfer(int port) throws Exception {
+		socket = new DatagramObjectSocket(port);
 		setState(SocketState.LISTEN);
 
 		this.queue = new PacketQueue();
@@ -29,8 +29,8 @@ public class TransferPeer {
 		sendThread = new SendThread();
 	}
 	
-	public TransferPeer(SocketAddress peerAddress) throws Exception {
-		this.socket = new DatagramSocket();
+	public DatagramTransfer(SocketAddress peerAddress) throws Exception {
+		this.socket = new DatagramObjectSocket();
 		this.peerAddress = peerAddress;
 		setState(SocketState.CLOSED);
 		
@@ -57,24 +57,16 @@ public class TransferPeer {
 	
 	private class ReceiveThread extends Thread {
 		public void run () {
-			byte[] buffer = new byte[2048];
-			DatagramPacket datagram = new DatagramPacket(buffer, buffer.length);
 			int lastReceivedSeq = 0;
 			
 			while(true) {
 				try {
-					socket.receive(datagram);
-					
-					Packet packet = (Packet) ByteUtils.toObject(datagram.getData());
-					System.out.println("Received " + packet);
+					Packet packet = socket.receive();
 					
 					if(packet.isSyn() && !packet.isAck()){
-						peerAddress = datagram.getSocketAddress();
-						Packet ack = new Packet(getSeq());
-						ack.setSyn();
-						ack.setAck();
-						ack.setAckseq(packet.getSeq());
-						DatagramUtils.send(socket, ack, peerAddress);
+						peerAddress = packet.getPeerAddress();
+						Packet ack = PacketFactory.createSynAckPacket(getSeq(), peerAddress, packet.getSeq());
+						socket.send(ack);
 						setState(SocketState.READY);
 						lastReceivedSeq = packet.getSeq();
 					}
@@ -85,12 +77,9 @@ public class TransferPeer {
 						}
 					}
 					else if(packet.isData() && !packet.isAck() && state.equals(SocketState.READY)) {
-						Packet ack = new Packet(getSeq());
-						ack.setData();
-						ack.setAck();
-						ack.setAckseq(packet.getSeq());
+						Packet ack = PacketFactory.createDataAckPacket(getSeq(), peerAddress, packet.getSeq());
 						
-						DatagramUtils.send(socket, ack, peerAddress);
+						socket.send(ack);
 						
 						if(packet.getSeq() > lastReceivedSeq) {
 							lastReceivedSeq = packet.getSeq();
@@ -138,9 +127,9 @@ public class TransferPeer {
 		public void run() {
 			try {
 				synchronized(this) {	
-					for(int i = 0; i < Main.TENTATIVAS; i++) {
-						DatagramUtils.send(socket, packet, peerAddress);
-						this.wait(Main.WAIT_TIMEOUT);
+					for(int i = 0; i < tries; i++) {
+						socket.send(packet);
+						this.wait(timeout);
 						if(this.ack != null) {
 							break;
 						}
@@ -161,8 +150,7 @@ public class TransferPeer {
 	}
 	
 	public boolean start() {
-		Packet syn = new Packet(getSeq());
-		syn.setSyn();
+		Packet syn = PacketFactory.createSynPacket(getSeq(), peerAddress);
 		
 		setState(SocketState.SYN_SENT);
 		
@@ -175,9 +163,7 @@ public class TransferPeer {
 	}
 	
 	public boolean send(Object object) {
-		Packet packet = new Packet(getSeq());
-		packet.setData();
-		packet.setObejct(object);
+		Packet packet = PacketFactory.createDataPacket(getSeq(), peerAddress, object);
 		
 		return sendThread.send(packet);
 	}
@@ -187,14 +173,15 @@ public class TransferPeer {
 	}
 	
 	public void finish() {
-		Packet res = new Packet(getSeq());
-		res.setRes();
+		int seq = getSeq();
+		Packet resRemote = PacketFactory.createResPacket(seq, peerAddress);
+		Packet resLocal = PacketFactory.createResPacket(seq, socket.getLocalSocketAddress());
 		
 		setState(SocketState.RES_SENT);
 		
 		try {
-			DatagramUtils.send(socket, res, peerAddress);
-			DatagramUtils.send(socket, res, socket.getLocalSocketAddress());
+			socket.send(resRemote);
+			socket.send(resLocal);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

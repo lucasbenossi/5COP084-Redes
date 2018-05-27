@@ -1,4 +1,4 @@
-package lmbenossi.FileTransfer;
+package lmbenossi.UDP;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

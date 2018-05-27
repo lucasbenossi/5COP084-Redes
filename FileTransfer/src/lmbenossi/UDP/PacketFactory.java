@@ -1,4 +1,4 @@
-package lmbenossi.FileTransfer;
+package lmbenossi.UDP;
 
 import java.net.SocketAddress;
 

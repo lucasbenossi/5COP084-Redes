@@ -2,6 +2,7 @@ package lmbenossi.FileTransfer;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Scanner;
+import lmbenossi.UDP.*;
 
 public class Receiver {
 	public static void run(Scanner scan) {
@@ -19,9 +20,9 @@ public class Receiver {
 			}
 		}
 
-		TransferPeer peer = null;
+		DatagramTransfer peer = null;
 		try {
-			peer = new TransferPeer(Main.PORT);
+			peer = new DatagramTransfer(Main.PORT);
 			
 			while(true) {
 				Fragment fragment = (Fragment) peer.receive();

@@ -7,6 +7,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Scanner;
+import lmbenossi.UDP.*;
 
 public class Sender {
 	public static void run(Scanner scan) {
@@ -68,9 +69,9 @@ public class Sender {
 			}
 		}
 		
-		TransferPeer peer = null;
+		DatagramTransfer peer = null;
 		try {
-			peer = new TransferPeer(peerAddress);
+			peer = new DatagramTransfer(peerAddress);
 			if(peer.start()) {
 				for(Fragment fragment : fragments) {
 					if(!peer.send(fragment)) {

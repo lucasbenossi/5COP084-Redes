@@ -1,4 +1,4 @@
-package lmbenossi.FileTransfer;
+package lmbenossi.UDP;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
