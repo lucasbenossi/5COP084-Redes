@@ -1,10 +1,12 @@
-package lmbenossi.UDP;
+package lmbenossi.DatagramObjectTransfer;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketAddress;
 import java.net.SocketException;
+
+import lmbenossi.ByteUtils.ByteUtils;
 
 public class DatagramObjectSocket {
 	private DatagramSocket socket;
@@ -25,6 +27,7 @@ public class DatagramObjectSocket {
 		socket.send(packetDatagram);
 		System.out.println("Sent " + packet);
 	}
+	
 	public Packet receive() throws IOException, ClassNotFoundException {
 		socket.receive(datagram);
 		Packet packet = (Packet) ByteUtils.toObject(datagram.getData());

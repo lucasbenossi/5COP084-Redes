@@ -4,8 +4,6 @@ import java.util.Scanner;
 public class Main {
 	public static final int PARTLEN = 1024;
 	public static final int PORT = 2000;
-	public static final int WAIT_TIMEOUT = 2000;
-	public static final int TENTATIVAS = 5;
 	
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);

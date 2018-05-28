@@ -1,4 +1,5 @@
-package lmbenossi.UDP;
+package lmbenossi.ByteUtils;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

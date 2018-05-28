@@ -1,4 +1,4 @@
-package lmbenossi.UDP;
+package lmbenossi.DatagramObjectTransfer;
 import java.util.LinkedList;
 
 public class PacketQueue {
