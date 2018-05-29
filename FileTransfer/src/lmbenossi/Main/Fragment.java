@@ -1,4 +1,4 @@
-package lmbenossi.FileTransfer;
+package lmbenossi.Main;
 import java.io.Serializable;
 
 public class Fragment implements Serializable {

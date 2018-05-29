@@ -1,4 +1,4 @@
-package chatClient;
+package lmbenossi.ChatClient;
 
 import java.util.Scanner;
 import java.io.PrintStream;

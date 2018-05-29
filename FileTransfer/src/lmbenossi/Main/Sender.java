@@ -1,4 +1,4 @@
-package lmbenossi.FileTransfer;
+package lmbenossi.Main;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -6,30 +6,42 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
-import java.util.Scanner;
 
+import lmbenossi.ArgsParser.Arg;
 import lmbenossi.DatagramObjectTransfer.*;
 
 public class Sender {
-	public static void run(Scanner scan) {
+	public static void run() {
+		int port = Globals.PORT;
+		int partlen = Globals.PARTLEN;
+		
 		File file = null;
 		FileInputStream fis = null;
 		while(fis == null) {
 			try {
-				System.out.print("Insira o caminho do arquivo: ");
-				String path = scan.nextLine();
-				file = new File(path);
+				file = new File(Arg.FILE.getValue());
 				fis = new FileInputStream(file);
 				
 			} catch (Exception e) {
 				System.out.println("Arquivo inválido.");
+				return;
+			}
+		}
+		
+		SocketAddress peerAddress = null;
+		while(peerAddress == null) {
+			try {
+				peerAddress = new InetSocketAddress(InetAddress.getByName(Arg.HOST.getValue()), port);
+			} catch (Exception e) {
+				System.out.println("IP inválido");
+				return;
 			}
 		}
 		
 		long tamanho = file.length();
-		int partes = (int) (tamanho / Main.PARTLEN);
+		int partes = (int) (tamanho / partlen);
 		int totalPartes = partes;
-		if( tamanho % Main.PARTLEN != 0 ) {
+		if( tamanho % partlen != 0 ) {
 			totalPartes++;
 		}
 
@@ -40,13 +52,13 @@ public class Sender {
 		try {
 			int i;
 			for (i = 0; i < partes; i++) {
-				byte[] bytes = new byte[Main.PARTLEN];
+				byte[] bytes = new byte[partlen];
 				fis.read(bytes);
 				fragments.add(i, new Fragment(totalPartes, i+1, bytes));
 			}
 
-			if (tamanho % Main.PARTLEN != 0) {
-				byte[] bytes = new byte[(int) (tamanho - partes * Main.PARTLEN)];
+			if (tamanho % partlen != 0) {
+				byte[] bytes = new byte[(int) (tamanho - partes * partlen)];
 				fis.read(bytes);
 				fragments.add(i, new Fragment(totalPartes, i+1, bytes));
 			}
@@ -58,16 +70,6 @@ public class Sender {
 			fis.close();
 		} catch (Exception e) {
 			System.out.println("ERRO: "+e);
-		}
-		
-		SocketAddress peerAddress = null;
-		while(peerAddress == null) {
-			try {
-				System.out.print("Insira o IP do receiver: ");
-				peerAddress = new InetSocketAddress(InetAddress.getByName(scan.nextLine()), Main.PORT);
-			} catch (Exception e) {
-				System.out.println("IP inválido");
-			}
 		}
 		
 		DatagramObjectTransfer peer = null;

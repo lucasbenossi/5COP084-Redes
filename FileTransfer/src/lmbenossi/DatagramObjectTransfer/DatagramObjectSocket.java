@@ -7,10 +7,11 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 
 import lmbenossi.ByteUtils.ByteUtils;
+import lmbenossi.Main.*;
 
 public class DatagramObjectSocket {
 	private DatagramSocket socket;
-	private byte[] buffer = new byte[2048];
+	private byte[] buffer = new byte[Globals.BUFFERSIZE];
 	private DatagramPacket datagram = new DatagramPacket(buffer, buffer.length);
 	
 	public DatagramObjectSocket(int port) throws SocketException {

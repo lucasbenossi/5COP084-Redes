@@ -1,4 +1,4 @@
-package chatServer;
+package lmbenossi.ChatServer;
 
 import java.io.IOException;
 import java.io.PrintStream;
