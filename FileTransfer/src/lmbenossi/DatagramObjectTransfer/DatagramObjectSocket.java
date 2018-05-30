@@ -5,9 +5,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketAddress;
 import java.net.SocketException;
-
 import lmbenossi.ByteUtils.ByteUtils;
-import lmbenossi.Main.*;
+import lmbenossi.Main.Globals;
 
 public class DatagramObjectSocket {
 	private DatagramSocket socket;
@@ -17,6 +16,7 @@ public class DatagramObjectSocket {
 	public DatagramObjectSocket(int port) throws SocketException {
 		this.socket = new DatagramSocket(port);
 	}
+	
 	public DatagramObjectSocket() throws SocketException {
 		this.socket = new DatagramSocket();
 	}

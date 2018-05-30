@@ -10,22 +10,17 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 	private SocketAddress peerAddress;
 	private SocketState state;
 	private int seq = 0;
-	private ReceiveThread receiveThread;
-	private SendThread sendThread;
-	private PacketQueue queue;
+	private ReceiveThread receiveThread = new ReceiveThread(this);
+	private SendThread sendThread = new SendThread(this);
+	private PacketQueue queue = new PacketQueue();
 	private int timeout = 2000;
 	private int tries = 3;
 	
 	public DatagramObjectTransfer(int port) throws Exception {
 		socket = new DatagramObjectSocket(port);
 		setState(SocketState.LISTEN);
-
-		this.queue = new PacketQueue();
 		
-		receiveThread = new ReceiveThread(this);
 		receiveThread.start();
-		
-		sendThread = new SendThread(this);
 	}
 	
 	public DatagramObjectTransfer(SocketAddress peerAddress) throws Exception {
@@ -33,12 +28,7 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 		this.peerAddress = peerAddress;
 		setState(SocketState.CLOSED);
 		
-		this.queue = new PacketQueue();
-		
-		receiveThread = new ReceiveThread(this);
 		receiveThread.start();
-		
-		sendThread = new SendThread(this);
 	}
 	
 	public DatagramObjectSocket getSocket() {
@@ -85,7 +75,12 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 		return this.tries;
 	}
 	
+	@Override
 	public boolean start() {
+		if(this.peerAddress == null) {
+			return false;
+		}
+		
 		Packet syn = PacketFactory.createSynPacket(getSeq(), peerAddress);
 		
 		setState(SocketState.SYN_SENT);
@@ -97,17 +92,20 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 		setState(SocketState.READY);
 		return true;
 	}
-	
+
+	@Override
 	public boolean send(Object object) {
 		Packet packet = PacketFactory.createDataPacket(getSeq(), peerAddress, object);
 		
 		return sendThread.send(packet);
 	}
-	
+
+	@Override
 	public Object receive() {
 		return queue.take();
 	}
-	
+
+	@Override
 	public void finish() {
 		int seq = getSeq();
 		Packet resRemote = PacketFactory.createResPacket(seq, peerAddress);

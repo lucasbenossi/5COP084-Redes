@@ -3,6 +3,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 
 import lmbenossi.DatagramObjectTransfer.*;
+import lmbenossi.ObjectTransfer.ObjectTransfer;
+import lmbenossi.TransmissionObjectTransfer.TransmissionObjectTransfer;
 import lmbenossi.ArgsParser.*;
 
 public class Receiver {
@@ -22,12 +24,21 @@ public class Receiver {
 			}
 		}
 
-		DatagramObjectTransfer peer = null;
+		ObjectTransfer objTransfer = null;
 		try {
-			peer = new DatagramObjectTransfer(port);
+			if(Globals.TCP) {
+				objTransfer = new TransmissionObjectTransfer(port);
+			}
+			else {				
+				objTransfer = new DatagramObjectTransfer(port);
+			}
 			
 			while(true) {
-				Fragment fragment = (Fragment) peer.receive();
+				Fragment fragment = (Fragment) objTransfer.receive();
+				if(fragment == null) {
+					System.out.println("Sender parou de enviar");
+					break;
+				}
 				fos.write(fragment.getData());
 				if(fragment.getNum() == fragment.getTotal()) {
 					break;

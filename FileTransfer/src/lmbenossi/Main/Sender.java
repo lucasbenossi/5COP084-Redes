@@ -9,6 +9,8 @@ import java.util.ArrayList;
 
 import lmbenossi.ArgsParser.Arg;
 import lmbenossi.DatagramObjectTransfer.*;
+import lmbenossi.ObjectTransfer.ObjectTransfer;
+import lmbenossi.TransmissionObjectTransfer.TransmissionObjectTransfer;
 
 public class Sender {
 	public static void run() {
@@ -72,17 +74,24 @@ public class Sender {
 			System.out.println("ERRO: "+e);
 		}
 		
-		DatagramObjectTransfer peer = null;
+		ObjectTransfer objTransfer = null;
 		try {
-			peer = new DatagramObjectTransfer(peerAddress);
-			if(peer.start()) {
+			if(Globals.TCP) {
+				objTransfer = new TransmissionObjectTransfer(peerAddress);
+			}
+			else {				
+				objTransfer = new DatagramObjectTransfer(peerAddress);
+			}
+			
+			
+			if(objTransfer.start()) {
 				for(Fragment fragment : fragments) {
-					if(!peer.send(fragment)) {
+					if(!objTransfer.send(fragment)) {
 						System.out.println("Receiver parou de responder");
 						break;
 					}
 				}
-				peer.finish();
+				objTransfer.finish();
 			}
 			else {
 				System.out.println("Receiver não respondeu");

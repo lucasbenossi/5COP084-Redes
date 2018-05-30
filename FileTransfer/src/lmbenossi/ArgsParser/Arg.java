@@ -7,7 +7,8 @@ public enum Arg {
 	FILE("-file", Type.STRING),
 	PORT("-port", Type.INTEGER),
 	PARTLEN("-partlen", Type.INTEGER),
-	BUFFER("-buffer", Type.INTEGER);
+	BUFFER("-buffer", Type.INTEGER),
+	TCP("-tcp", Type.BOOLEAN);
 	
 	private enum Type{
 		BOOLEAN, STRING, INTEGER;

@@ -49,8 +49,8 @@ public class Parser {
 		}
 		
 		if(!ok) {
-			System.err.println("Uso: FileTransfer.jar -sender -file FILE -host HOST [-port PORT] [-partlen LENGHT]");
-			System.err.println("     FileTransfer.jar -receiver -file FILE [-port PORT] [-buffer SIZE]");
+			System.err.println("Uso: FileTransfer.jar -sender -file FILE -host HOST [-port PORT] [-partlen LENGHT] [-tcp]");
+			System.err.println("     FileTransfer.jar -receiver -file FILE [-port PORT] [-buffer SIZE] [-tcp]");
 		}
 		
 		return ok;
