@@ -76,7 +76,7 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 	}
 
 	@Override
-	public synchronized void finish() {
+	public void finish() {
 		int seq = getSeq();
 		Packet resRemote = PacketFactory.createResPacket(seq, peerAddress);
 		Packet resLocal = PacketFactory.createResPacket(seq, socket.getLocalSocketAddress());
@@ -87,6 +87,15 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 			socket.send(resRemote);
 			socket.send(resLocal);
 		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			Thread thread = this.receiveThread.getThread(); 
+			if(thread.isAlive()) {
+				thread.join();
+			}
+		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 	}

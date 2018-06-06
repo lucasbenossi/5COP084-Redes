@@ -4,13 +4,14 @@ import java.net.SocketAddress;
 
 public class ReceiveThread implements Runnable {
 	private DatagramObjectTransfer dot;
+	Thread thread;
 	
 	public ReceiveThread(DatagramObjectTransfer dot) {
 		this.dot = dot;
 	}
 	
 	public void start() {
-		Thread thread = new Thread(this);
+		thread = new Thread(this);
 		thread.start();
 	}
 	
@@ -65,5 +66,9 @@ public class ReceiveThread implements Runnable {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public Thread getThread() {
+		return this.thread;
 	}
 }

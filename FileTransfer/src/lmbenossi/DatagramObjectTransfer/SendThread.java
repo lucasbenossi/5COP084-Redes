@@ -1,5 +1,7 @@
 package lmbenossi.DatagramObjectTransfer;
 
+import lmbenossi.Main.Globals;
+
 public class SendThread implements Runnable{
 	private Packet packet;
 	private Packet ack;
@@ -23,12 +25,15 @@ public class SendThread implements Runnable{
 	}
 	
 	public void run() {
+		int lost = 0;
 		try {
 			synchronized(this) {	
 				for(int i = 0; i < dot.getTries(); i++) {
 					dot.getSocket().send(packet);
+					lost++;
 					this.wait(dot.getTimeout());
 					if(this.ack != null) {
+						lost--;
 						break;
 					}
 				}
@@ -36,6 +41,7 @@ public class SendThread implements Runnable{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		Globals.setLostPackets(lost);
 	}
 	
 	public void setAck(Packet ack) {

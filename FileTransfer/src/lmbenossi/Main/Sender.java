@@ -100,5 +100,7 @@ public class Sender {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+		System.out.println("Pacotes perdidos: " + Globals.lostPackets);
 	}
 }

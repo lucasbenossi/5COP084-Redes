@@ -7,6 +7,7 @@ public class Globals {
 	public static int PARTLEN = 1024;
 	public static int BUFFERSIZE = 2048;
 	public static boolean TCP = false;
+	public static int lostPackets = 0;
 	
 	public static void set() {
 		if(Arg.PORT.isSet()) {
@@ -24,5 +25,9 @@ public class Globals {
 		if(Arg.TCP.isSet()) {
 			Globals.TCP = true;
 		}
+	}
+	
+	public synchronized static void setLostPackets(int lost) {
+		Globals.lostPackets = lost;
 	}
 }
