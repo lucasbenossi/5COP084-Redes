@@ -8,7 +8,8 @@ public enum Arg {
 	PORT("-port", Type.INTEGER),
 	PARTLEN("-partlen", Type.INTEGER),
 	BUFFER("-buffer", Type.INTEGER),
-	TCP("-tcp", Type.BOOLEAN);
+	TCP("-tcp", Type.BOOLEAN),
+	WINDOW("-window", Type.INTEGER);
 	
 	private enum Type{
 		BOOLEAN, STRING, INTEGER;

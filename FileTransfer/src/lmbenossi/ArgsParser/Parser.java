@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class Parser {
 	private static ArrayList<String> argsList = new ArrayList<>();
 	
-	public static boolean parse(String[] argv) {
+	public static void parse(String[] argv) {
 		for(String arg : argv) {
 			argsList.add(arg);
 		}
@@ -25,11 +25,9 @@ public class Parser {
 				argsList.remove(i);
 			}
 		}
-		
-		return check();
 	}
 	
-	private static boolean check() {
+	public static boolean check() {
 		boolean ok = false;
 		
 		if(Arg.SENDER.isSet()) {
@@ -49,7 +47,7 @@ public class Parser {
 		}
 		
 		if(!ok) {
-			System.err.println("Uso: FileTransfer.jar -sender -file FILE -host HOST [-port PORT] [-partlen LENGHT] [-tcp]");
+			System.err.println("Uso: FileTransfer.jar -sender -file FILE -host HOST [-port PORT] [-partlen LENGHT] [-tcp] [-window SIZE]");
 			System.err.println("     FileTransfer.jar -receiver -file FILE [-port PORT] [-buffer SIZE] [-tcp]");
 		}
 		

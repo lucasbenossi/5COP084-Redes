@@ -47,7 +47,7 @@ public class ReceiveThread implements Runnable {
 					
 					if(packet.getSeq() > lastReceivedSeq) {
 						lastReceivedSeq = packet.getSeq();
-						dot.getQueue().put(packet.getObject());
+						dot.getQueue().put(packet);
 					}
 				}
 				else if(packet.isData() && packet.isAck() && dot.getState().equals(SocketState.READY) && packet.getAckseq() == dot.getSendThread().getPacket().getSeq()) {

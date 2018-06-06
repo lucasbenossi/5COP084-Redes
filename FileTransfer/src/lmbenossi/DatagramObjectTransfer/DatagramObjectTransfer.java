@@ -72,7 +72,7 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 
 	@Override
 	public synchronized Object receive() {
-		return queue.take();
+		return queue.take().getObject();
 	}
 
 	@Override

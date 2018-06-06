@@ -5,7 +5,9 @@ import lmbenossi.ArgsParser.*;
 public class Main {
 	
 	public static void main(String[] argv) {
-		if(!Parser.parse(argv)) {
+		Parser.parse(argv);
+		
+		if(!Parser.check()) {
 			return;
 		}
 		

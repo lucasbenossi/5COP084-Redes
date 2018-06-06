@@ -6,6 +6,7 @@ public class SendThread implements Runnable{
 	private Packet packet;
 	private Packet ack;
 	private DatagramObjectTransfer dot;
+	private Thread thread;
 	
 	public SendThread(DatagramObjectTransfer dot) {
 		this.dot = dot;
@@ -14,7 +15,7 @@ public class SendThread implements Runnable{
 	public boolean send(Packet packet) {
 		this.packet = packet;
 		this.ack = null;
-		Thread thread = new Thread(this);
+		thread = new Thread(this);
 		thread.start();
 		try {
 			thread.join();
@@ -50,5 +51,9 @@ public class SendThread implements Runnable{
 	
 	public Packet getPacket() {
 		return this.packet;
+	}
+	
+	public Thread getThread() {
+		return this.thread;
 	}
 }

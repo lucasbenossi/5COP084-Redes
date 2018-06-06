@@ -2,18 +2,18 @@ package lmbenossi.DatagramObjectTransfer;
 import java.util.LinkedList;
 
 public class PacketQueue {
-	private LinkedList<Object> queue;
+	private LinkedList<Packet> queue;
 	
 	public PacketQueue() {
-		this.queue = new LinkedList<Object>();
+		this.queue = new LinkedList<>();
 	}
 	
-	public synchronized void put(Object object) {
-		this.queue.add(object);
+	public synchronized void put(Packet packet) {
+		this.queue.add(packet);
 		this.notify();
 	}
 	
-	public synchronized Object take() {
+	public synchronized Packet take() {
 		while(queue.isEmpty()) {
 			try {
 				this.wait();
