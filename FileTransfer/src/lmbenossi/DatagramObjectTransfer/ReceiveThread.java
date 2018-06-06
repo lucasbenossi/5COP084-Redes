@@ -1,5 +1,7 @@
 package lmbenossi.DatagramObjectTransfer;
 
+import java.net.SocketAddress;
+
 public class ReceiveThread implements Runnable {
 	private DatagramObjectTransfer dot;
 	
@@ -19,12 +21,16 @@ public class ReceiveThread implements Runnable {
 			try {
 				Packet packet = dot.getSocket().receive();
 				
-				if(packet.isSyn() && !packet.isAck()){
-					dot.setPeerAddress(packet.getPeerAddress());
-					Packet ack = PacketFactory.createSynAckPacket(dot.getSeq(), dot.getPeerAddress(), packet.getSeq());
-					dot.getSocket().send(ack);
-					dot.setState(SocketState.READY);
-					lastReceivedSeq = packet.getSeq();
+				if(packet.isSyn() && !packet.isAck() && dot.getState().equals(SocketState.LISTEN)){
+					synchronized (dot) {
+						SocketAddress peerAddress = packet.getPeerAddress();
+						Packet ack = PacketFactory.createSynAckPacket(dot.getSeq(), peerAddress, packet.getSeq());
+						dot.getSocket().send(ack);
+						dot.setState(SocketState.READY);
+						lastReceivedSeq = packet.getSeq();
+						dot.setPeerAddress(peerAddress);
+						dot.notify();
+					}
 				}
 				else if(packet.isSyn() && packet.isAck() && dot.getState().equals(SocketState.SYN_SENT)) {
 					SendThread sendThread = dot.getSendThread();

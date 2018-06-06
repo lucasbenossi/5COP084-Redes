@@ -12,27 +12,38 @@ import lmbenossi.ObjectTransfer.ObjectTransfer;
 public class TransmissionObjectTransfer implements ObjectTransfer {
 	Socket socket;
 	SocketAddress peerAddress;
+	int port;
 	ObjectInputStream ois;
 	ObjectOutputStream oos;
 	
 	public TransmissionObjectTransfer(int port) throws IOException {
-		ServerSocket listener = new ServerSocket(port);
-		System.out.println("LISTEN");
-		this.socket = listener.accept();
-		System.out.println("CONNECTED");
-		this.peerAddress = socket.getRemoteSocketAddress();
-		this.ois = new ObjectInputStream(socket.getInputStream());
-		this.oos = new ObjectOutputStream(socket.getOutputStream());
-		listener.close();
+		this.peerAddress = null;
+		this.port = port;
 	}
 	
 	public TransmissionObjectTransfer(SocketAddress peerAddress) {
 		this.peerAddress = peerAddress;
 		this.socket = new Socket();
 	}
+	
+	@Override
+	public void listen() {
+		try {
+			ServerSocket listener = new ServerSocket(this.port);
+			System.out.println("LISTEN");
+			this.socket = listener.accept();
+			System.out.println("CONNECTED");
+			this.peerAddress = socket.getRemoteSocketAddress();
+			this.ois = new ObjectInputStream(socket.getInputStream());
+			this.oos = new ObjectOutputStream(socket.getOutputStream());
+			listener.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	@Override
-	public boolean start() {
+	public boolean connect() {
 		if(this.peerAddress == null) {
 			return false;
 		}

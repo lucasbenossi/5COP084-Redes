@@ -2,6 +2,8 @@ package lmbenossi.DatagramObjectTransfer;
 
 import java.io.IOException;
 import java.net.SocketAddress;
+import java.net.SocketException;
+
 import lmbenossi.ObjectTransfer.ObjectTransfer;
 
 public class DatagramObjectTransfer implements ObjectTransfer {
@@ -16,19 +18,77 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 	private int timeout = 2000;
 	private int tries = 3;
 	
-	public DatagramObjectTransfer(int port) throws Exception {
-		socket = new DatagramObjectSocket(port);
-		setState(SocketState.LISTEN);
-		
-		receiveThread.start();
+	public DatagramObjectTransfer(int port) throws SocketException {
+		this.socket = new DatagramObjectSocket(port);
+		this.peerAddress = null;
+		setState(SocketState.CLOSED);
 	}
 	
-	public DatagramObjectTransfer(SocketAddress peerAddress) throws Exception {
+	public DatagramObjectTransfer(SocketAddress peerAddress) throws SocketException {
 		this.socket = new DatagramObjectSocket();
 		this.peerAddress = peerAddress;
 		setState(SocketState.CLOSED);
-		
+	}
+
+	@Override
+	public synchronized void listen() {
+		setState(SocketState.LISTEN);
 		receiveThread.start();
+		try {
+			while(this.peerAddress == null) {
+				this.wait();
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Override
+	public synchronized boolean connect() {
+		if(this.peerAddress == null) {
+			return false;
+		}
+		
+		this.receiveThread.start();
+		
+		Packet syn = PacketFactory.createSynPacket(getSeq(), peerAddress);
+		
+		setState(SocketState.SYN_SENT);
+		
+		if(sendThread.send(syn) == false) {
+			finish();
+			return false;
+		}
+		setState(SocketState.READY);
+		return true;
+	}
+
+	@Override
+	public synchronized boolean send(Object object) {
+		Packet packet = PacketFactory.createDataPacket(getSeq(), peerAddress, object);
+		
+		return sendThread.send(packet);
+	}
+
+	@Override
+	public synchronized Object receive() {
+		return queue.take();
+	}
+
+	@Override
+	public synchronized void finish() {
+		int seq = getSeq();
+		Packet resRemote = PacketFactory.createResPacket(seq, peerAddress);
+		Packet resLocal = PacketFactory.createResPacket(seq, socket.getLocalSocketAddress());
+		
+		setState(SocketState.RES_SENT);
+		
+		try {
+			socket.send(resRemote);
+			socket.send(resLocal);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public DatagramObjectSocket getSocket() {
@@ -38,7 +98,7 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 	public SocketAddress getPeerAddress() {
 		return this.peerAddress;
 	}
-	public void setPeerAddress(SocketAddress peerAddress) {
+	public synchronized void setPeerAddress(SocketAddress peerAddress) {
 		this.peerAddress = peerAddress;
 	}
 	
@@ -50,7 +110,7 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 		System.out.println(this.state);
 	}
 	
-	public synchronized int getSeq() {
+	public int getSeq() {
 		seq++;
 		return seq;
 	}
@@ -73,51 +133,5 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 	
 	public int getTries() {
 		return this.tries;
-	}
-	
-	@Override
-	public boolean start() {
-		if(this.peerAddress == null) {
-			return false;
-		}
-		
-		Packet syn = PacketFactory.createSynPacket(getSeq(), peerAddress);
-		
-		setState(SocketState.SYN_SENT);
-		
-		if(sendThread.send(syn) == false) {
-			finish();
-			return false;
-		}
-		setState(SocketState.READY);
-		return true;
-	}
-
-	@Override
-	public boolean send(Object object) {
-		Packet packet = PacketFactory.createDataPacket(getSeq(), peerAddress, object);
-		
-		return sendThread.send(packet);
-	}
-
-	@Override
-	public Object receive() {
-		return queue.take();
-	}
-
-	@Override
-	public void finish() {
-		int seq = getSeq();
-		Packet resRemote = PacketFactory.createResPacket(seq, peerAddress);
-		Packet resLocal = PacketFactory.createResPacket(seq, socket.getLocalSocketAddress());
-		
-		setState(SocketState.RES_SENT);
-		
-		try {
-			socket.send(resRemote);
-			socket.send(resLocal);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 }

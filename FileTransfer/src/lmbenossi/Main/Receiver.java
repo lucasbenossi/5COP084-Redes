@@ -33,6 +33,8 @@ public class Receiver {
 				objTransfer = new DatagramObjectTransfer(port);
 			}
 			
+			objTransfer.listen();
+			
 			while(true) {
 				Fragment fragment = (Fragment) objTransfer.receive();
 				if(fragment == null) {

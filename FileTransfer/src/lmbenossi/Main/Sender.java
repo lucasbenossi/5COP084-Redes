@@ -84,7 +84,7 @@ public class Sender {
 			}
 			
 			
-			if(objTransfer.start()) {
+			if(objTransfer.connect()) {
 				for(Fragment fragment : fragments) {
 					if(!objTransfer.send(fragment)) {
 						System.out.println("Receiver parou de responder");

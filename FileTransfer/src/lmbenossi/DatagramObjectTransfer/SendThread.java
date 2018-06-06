@@ -19,10 +19,7 @@ public class SendThread implements Runnable{
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		if(this.ack == null) {
-			return false;
-		}
-		return true;
+		return this.ack != null;
 	}
 	
 	public void run() {
