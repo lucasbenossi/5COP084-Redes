@@ -3,9 +3,10 @@ package lmbenossi.DatagramObjectTransfer;
 import lmbenossi.Main.Globals;
 
 public class ConnectThread implements Runnable {
-	DatagramObjectTransfer dot;
-	Packet syn;
-	Packet ack;
+	private DatagramObjectTransfer dot;
+	private Packet syn;
+	private Packet ack;
+	private Object lock = new Object();
 	
 	public ConnectThread(DatagramObjectTransfer dot) {
 		this.dot = dot;
@@ -30,11 +31,11 @@ public class ConnectThread implements Runnable {
 	public void run() {
 		int lost = 0;
 		try {
-			synchronized(this) {	
+			synchronized(lock) {	
 				for(int i = 0; i < dot.getTries(); i++) {
 					dot.getSocket().send(this.syn);
 					lost++;
-					this.wait(dot.getTimeout());
+					lock.wait(dot.getTimeout());
 					if(this.ack != null) {
 						lost--;
 						break;
@@ -48,7 +49,10 @@ public class ConnectThread implements Runnable {
 	}
 	
 	public void setAck(Packet ack) {
-		this.ack = ack;
+		synchronized (lock) {			
+			this.ack = ack;
+			lock.notify();
+		}
 	}
 	
 	public Packet getSyn() {

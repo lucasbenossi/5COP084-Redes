@@ -39,11 +39,7 @@ public class ReceiveThread implements Runnable {
 					}
 				}
 				else if(received.isSyn() && received.isAck() && dot.getState().equals(SocketState.SYN_SENT) && received.getAckseq() == dot.getConnectThread().getSyn().getSeq()) {
-					ConnectThread connectThread = dot.getConnectThread();
-					synchronized(connectThread) {
-						connectThread.setAck(received);
-						connectThread.notify();
-					}
+					dot.getConnectThread().setAck(received);
 				}
 				else if(received.isData() && !received.isAck() && dot.getState().equals(SocketState.READY)) {
 					Packet ack = PacketFactory.createDataAckPacket(dot.getSeq(), dot.getPeerAddress(), received.getSeq());

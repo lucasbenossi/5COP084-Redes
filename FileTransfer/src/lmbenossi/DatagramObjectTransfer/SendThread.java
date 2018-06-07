@@ -8,7 +8,7 @@ public class SendThread implements Runnable{
 	private DatagramObjectTransfer dot;
 	private Thread thread;
 	private PacketQueue queue = new PacketQueue();
-	private Thread waiting;
+	private Object lock = new Object();
 	
 	public SendThread(DatagramObjectTransfer dot) {
 		this.dot = dot;
@@ -20,11 +20,10 @@ public class SendThread implements Runnable{
 	}
 	
 	public void waitToFinish() {
-		waiting = Thread.currentThread();
-		synchronized (waiting) {
+		synchronized (lock) {
 			queue.put(null);
 			try {
-				waiting.wait();
+				lock.wait();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -56,8 +55,8 @@ public class SendThread implements Runnable{
 			int lost = 0;
 			
 			if(packet == null) {
-				synchronized (waiting) {
-					waiting.notify();
+				synchronized (lock) {
+					lock.notify();
 				}
 				continue;
 			}
