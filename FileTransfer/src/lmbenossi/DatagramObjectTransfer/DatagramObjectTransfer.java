@@ -15,7 +15,6 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 	private ReceiveThread receiveThread = new ReceiveThread(this);
 	private SendThread sendThread = new SendThread(this);
 	private ConnectThread connectThread = new ConnectThread(this);
-	private PacketQueue queue = new PacketQueue();
 	private int timeout = 2000;
 	private int tries = 3;
 	
@@ -75,7 +74,7 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 
 	@Override
 	public Object receive() {
-		return queue.take().getObject();
+		return receiveThread.receive().getObject();
 	}
 
 	@Override
@@ -139,10 +138,6 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 	
 	public ConnectThread getConnectThread() {
 		return this.connectThread;
-	}
-	
-	public PacketQueue getQueue() {
-		return this.queue;
 	}
 	
 	public int getTimeout() {

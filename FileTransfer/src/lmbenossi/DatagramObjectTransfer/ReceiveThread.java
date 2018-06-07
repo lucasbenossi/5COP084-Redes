@@ -5,6 +5,7 @@ import java.net.SocketAddress;
 public class ReceiveThread implements Runnable {
 	private DatagramObjectTransfer dot;
 	Thread thread;
+	PacketQueue queue = new PacketQueue();
 	
 	public ReceiveThread(DatagramObjectTransfer dot) {
 		this.dot = dot;
@@ -13,6 +14,10 @@ public class ReceiveThread implements Runnable {
 	public void start() {
 		thread = new Thread(this);
 		thread.start();
+	}
+	
+	public Packet receive() {
+		return queue.take();
 	}
 	
 	public void run () {
@@ -47,7 +52,7 @@ public class ReceiveThread implements Runnable {
 					
 					if(received.getSeq() > lastReceivedSeq) {
 						lastReceivedSeq = received.getSeq();
-						dot.getQueue().put(received);
+						queue.put(received);
 					}
 				}
 				else if(received.isData() && received.isAck() && dot.getState().equals(SocketState.READY) && received.getAckseq() == dot.getSendThread().getPacket().getSeq()) {
