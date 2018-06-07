@@ -14,6 +14,7 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 	private int seq = 0;
 	private ReceiveThread receiveThread = new ReceiveThread(this);
 	private SendThread sendThread = new SendThread(this);
+	private ConnectThread connectThread = new ConnectThread(this);
 	private PacketQueue queue = new PacketQueue();
 	private int timeout = 2000;
 	private int tries = 3;
@@ -55,7 +56,7 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 		
 		setState(SocketState.SYN_SENT);
 		
-		if(sendThread.send(syn) == false) {
+		if(connectThread.sendSyn(syn) == false) {
 			finish();
 			return false;
 		}
@@ -130,6 +131,10 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 	
 	public SendThread getSendThread() {
 		return this.sendThread;
+	}
+	
+	public ConnectThread getConnectThread() {
+		return this.connectThread;
 	}
 	
 	public PacketQueue getQueue() {

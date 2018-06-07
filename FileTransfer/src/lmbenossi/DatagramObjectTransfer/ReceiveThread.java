@@ -20,44 +20,44 @@ public class ReceiveThread implements Runnable {
 		
 		while(true) {
 			try {
-				Packet packet = dot.getSocket().receive();
+				Packet received = dot.getSocket().receive();
 				
-				if(packet.isSyn() && !packet.isAck() && dot.getState().equals(SocketState.LISTEN)){
+				if(received.isSyn() && !received.isAck() && dot.getState().equals(SocketState.LISTEN)){
 					synchronized (dot) {
-						SocketAddress peerAddress = packet.getPeerAddress();
-						Packet ack = PacketFactory.createSynAckPacket(dot.getSeq(), peerAddress, packet.getSeq());
+						SocketAddress peerAddress = received.getPeerAddress();
+						Packet ack = PacketFactory.createSynAckPacket(dot.getSeq(), peerAddress, received.getSeq());
 						dot.getSocket().send(ack);
 						dot.setState(SocketState.READY);
-						lastReceivedSeq = packet.getSeq();
+						lastReceivedSeq = received.getSeq();
 						dot.setPeerAddress(peerAddress);
 						dot.notify();
 					}
 				}
-				else if(packet.isSyn() && packet.isAck() && dot.getState().equals(SocketState.SYN_SENT)) {
-					SendThread sendThread = dot.getSendThread();
-					synchronized(sendThread) {
-						sendThread.setAck(packet);
-						sendThread.notify();
+				else if(received.isSyn() && received.isAck() && dot.getState().equals(SocketState.SYN_SENT) && received.getAckseq() == dot.getConnectThread().getSyn().getSeq()) {
+					ConnectThread connectThread = dot.getConnectThread();
+					synchronized(connectThread) {
+						connectThread.setAck(received);
+						connectThread.notify();
 					}
 				}
-				else if(packet.isData() && !packet.isAck() && dot.getState().equals(SocketState.READY)) {
-					Packet ack = PacketFactory.createDataAckPacket(dot.getSeq(), dot.getPeerAddress(), packet.getSeq());
+				else if(received.isData() && !received.isAck() && dot.getState().equals(SocketState.READY)) {
+					Packet ack = PacketFactory.createDataAckPacket(dot.getSeq(), dot.getPeerAddress(), received.getSeq());
 					
 					dot.getSocket().send(ack);
 					
-					if(packet.getSeq() > lastReceivedSeq) {
-						lastReceivedSeq = packet.getSeq();
-						dot.getQueue().put(packet);
+					if(received.getSeq() > lastReceivedSeq) {
+						lastReceivedSeq = received.getSeq();
+						dot.getQueue().put(received);
 					}
 				}
-				else if(packet.isData() && packet.isAck() && dot.getState().equals(SocketState.READY) && packet.getAckseq() == dot.getSendThread().getPacket().getSeq()) {
+				else if(received.isData() && received.isAck() && dot.getState().equals(SocketState.READY) && received.getAckseq() == dot.getSendThread().getPacket().getSeq()) {
 					SendThread sendThread = dot.getSendThread();
 					synchronized(sendThread) {
-						sendThread.setAck(packet);
+						sendThread.setAck(received);
 						sendThread.notify();
 					}
 				}
-				else if(packet.isRes()) {
+				else if(received.isRes()) {
 					dot.setState(SocketState.CLOSED);
 					break;
 				}
