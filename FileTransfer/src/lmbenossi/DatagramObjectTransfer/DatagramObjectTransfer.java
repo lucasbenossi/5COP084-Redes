@@ -34,7 +34,7 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 	@Override
 	public synchronized void listen() {
 		setState(SocketState.LISTEN);
-		receiveThread.start();
+		this.receiveThread.start();
 		try {
 			while(this.peerAddress == null) {
 				this.wait();
@@ -42,10 +42,11 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		this.sendThread.start();
 	}
 	
 	@Override
-	public synchronized boolean connect() {
+	public boolean connect() {
 		if(this.peerAddress == null) {
 			return false;
 		}
@@ -56,23 +57,24 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 		
 		setState(SocketState.SYN_SENT);
 		
-		if(connectThread.sendSyn(syn) == false) {
+		if(! connectThread.sendSyn(syn)) {
 			finish();
 			return false;
 		}
 		setState(SocketState.READY);
+		this.sendThread.start();
 		return true;
 	}
 
 	@Override
-	public synchronized boolean send(Object object) {
+	public boolean send(Object object) {
 		Packet packet = PacketFactory.createDataPacket(getSeq(), peerAddress, object);
 		
 		return sendThread.send(packet);
 	}
 
 	@Override
-	public synchronized Object receive() {
+	public Object receive() {
 		return queue.take().getObject();
 	}
 
@@ -81,6 +83,8 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 		int seq = getSeq();
 		Packet resRemote = PacketFactory.createResPacket(seq, peerAddress);
 		Packet resLocal = PacketFactory.createResPacket(seq, socket.getLocalSocketAddress());
+		
+		this.sendThread.waitToFinish();
 		
 		setState(SocketState.RES_SENT);
 		
@@ -108,14 +112,14 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 	public SocketAddress getPeerAddress() {
 		return this.peerAddress;
 	}
-	public synchronized void setPeerAddress(SocketAddress peerAddress) {
+	public void setPeerAddress(SocketAddress peerAddress) {
 		this.peerAddress = peerAddress;
 	}
 	
 	public SocketState getState() {
 		return this.state;
 	}
-	public synchronized void setState(SocketState state) {
+	public void setState(SocketState state) {
 		this.state = state;
 		System.out.println(this.state);
 	}

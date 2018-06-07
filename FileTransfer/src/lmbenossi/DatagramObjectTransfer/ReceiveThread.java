@@ -58,6 +58,7 @@ public class ReceiveThread implements Runnable {
 					}
 				}
 				else if(received.isRes()) {
+					dot.getSendThread().stop();
 					dot.setState(SocketState.CLOSED);
 					break;
 				}

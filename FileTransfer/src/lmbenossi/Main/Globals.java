@@ -32,7 +32,7 @@ public class Globals {
 		}
 	}
 	
-	public synchronized static void setLostPackets(int lost) {
-		Globals.lostPackets = lost;
+	public synchronized static void incrementLostPackets(int lost) {
+		Globals.lostPackets += lost;
 	}
 }

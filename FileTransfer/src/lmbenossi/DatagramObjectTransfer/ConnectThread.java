@@ -44,7 +44,7 @@ public class ConnectThread implements Runnable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		Globals.setLostPackets(lost);
+		Globals.incrementLostPackets(lost);
 	}
 	
 	public void setAck(Packet ack) {
