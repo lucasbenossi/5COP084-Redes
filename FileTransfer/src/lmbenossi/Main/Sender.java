@@ -92,6 +92,13 @@ public class Sender {
 					}
 				}
 				objTransfer.finish();
+				
+				if(objTransfer instanceof DatagramObjectTransfer) {
+					DatagramObjectTransfer dot = (DatagramObjectTransfer) objTransfer;
+					if(dot.error()) {
+						System.out.println("Erro");
+					}
+				}
 			}
 			else {
 				System.out.println("Receiver não respondeu");

@@ -38,10 +38,11 @@ public class SendMultiplexer implements Runnable {
 		ackQueue.put(null);
 	}
 	
-	public boolean send(Packet packet) {
-		int i = packet.getSeq() % n;
-		threads[i].send(packet);
-		return true;
+	public void send(Packet packet) {
+		if(packet != null) {
+			int i = packet.getSeq() % n;
+			threads[i].send(packet);
+		}
 	}
 	
 	@Override
@@ -60,5 +61,13 @@ public class SendMultiplexer implements Runnable {
 	
 	public void setAck(Packet ack) {
 		ackQueue.put(ack);
+	}
+	
+	public boolean error() {
+		boolean error = false;
+		for(SendThread thread : threads) {
+			error |= thread.error();
+		}
+		return error;
 	}
 }

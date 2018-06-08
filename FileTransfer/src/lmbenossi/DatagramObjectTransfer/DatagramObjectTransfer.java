@@ -16,7 +16,7 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 	private ReceiveThread receiveThread = new ReceiveThread(this);
 	private SendMultiplexer sendMultiplexer = new SendMultiplexer(this);
 	private ConnectThread connectThread = new ConnectThread(this);
-	private int timeout = 2000;
+	private int timeout = 300;
 	private int tries = 3;
 	
 	public DatagramObjectTransfer(int port) throws SocketException {
@@ -70,7 +70,9 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 	public boolean send(Object object) {
 		Packet packet = PacketFactory.createDataPacket(getSeq(), peerAddress, object, getDataseq());
 		
-		return sendMultiplexer.send(packet);
+		sendMultiplexer.send(packet);
+		
+		return true;
 	}
 
 	@Override
@@ -84,7 +86,7 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 		Packet resRemote = PacketFactory.createResPacket(seq, peerAddress);
 		Packet resLocal = PacketFactory.createResPacket(seq, socket.getLocalSocketAddress());
 		
-		this.sendMultiplexer.waitToFinish();
+		sendMultiplexer.waitToFinish();
 		
 		setState(SocketState.RES_SENT);
 		
@@ -152,5 +154,9 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 	
 	public int getTries() {
 		return this.tries;
+	}
+	
+	public boolean error() {
+		return this.sendMultiplexer.error();
 	}
 }

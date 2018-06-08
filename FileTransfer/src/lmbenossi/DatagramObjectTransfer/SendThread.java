@@ -15,6 +15,7 @@ public class SendThread implements Runnable{
 	private ReentrantLock lock = new ReentrantLock();
 	private Condition finished = lock.newCondition();
 	private Condition ackReceived = lock.newCondition();
+	private boolean error = false;
 	
 	public SendThread(DatagramObjectTransfer dot) {
 		this.dot = dot;
@@ -26,32 +27,26 @@ public class SendThread implements Runnable{
 	}
 	
 	public void waitToFinish() {
-		lock.lock();
-		queue.put(null);
-		try {
-			finished.await();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		if(thread != null && thread.isAlive()) {
+			lock.lock();
+			queue.put(null);
+			try {
+				finished.await();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			lock.unlock();
 		}
-		lock.unlock();
 	}
 	
 	public void stop() {
 		this.queue.put(PacketFactory.createResPacket(0, null));
 	}
 	
-	public boolean send(Packet packet) {
-		if(!thread.isAlive()) {
-			return false;
+	public void send(Packet packet) {
+		if(packet != null) {
+			queue.put(packet);
 		}
-		
-		if(packet == null) {
-			return false;
-		}
-		
-		queue.put(packet);
-		
-		return true;
 	}
 	
 	public void run() {
@@ -61,13 +56,12 @@ public class SendThread implements Runnable{
 			int lost = 0;
 			
 			if(packet == null) {
-				lock.lock();
-				finished.signal();
-				lock.unlock();
-				break;
+				signal();
+				continue;
 			}
 			
 			if(packet.isRes()) {
+				signal();
 				break;
 			}
 			
@@ -90,11 +84,19 @@ public class SendThread implements Runnable{
 			}
 			
 			if(this.ack == null) {
+				this.error = true;
+				signal();
 				break;
 			}
 			
 			Globals.incrementLostPackets(lost);
 		}
+	}
+
+	private void signal() {
+		lock.lock();
+		finished.signal();
+		lock.unlock();
 	}
 	
 	public void setAck(Packet ack) {
@@ -104,5 +106,9 @@ public class SendThread implements Runnable{
 		ackReceived.signal();
 		
 		lock.unlock();
+	}
+	
+	public boolean error() {
+		return this.error;
 	}
 }
