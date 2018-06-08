@@ -1,5 +1,9 @@
 package lmbenossi.DatagramObjectTransfer;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+
 import lmbenossi.Main.Globals;
 
 public class SendThread implements Runnable{
@@ -8,7 +12,9 @@ public class SendThread implements Runnable{
 	private DatagramObjectTransfer dot;
 	private Thread thread;
 	private PacketQueue queue = new PacketQueue();
-	private Object lock = new Object();
+	private ReentrantLock lock = new ReentrantLock();
+	private Condition finished = lock.newCondition();
+	private Condition ackReceived = lock.newCondition();
 	
 	public SendThread(DatagramObjectTransfer dot) {
 		this.dot = dot;
@@ -20,14 +26,14 @@ public class SendThread implements Runnable{
 	}
 	
 	public void waitToFinish() {
-		synchronized (lock) {
-			queue.put(null);
-			try {
-				lock.wait();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+		lock.lock();
+		queue.put(null);
+		try {
+			finished.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
+		lock.unlock();
 	}
 	
 	public void stop() {
@@ -55,10 +61,10 @@ public class SendThread implements Runnable{
 			int lost = 0;
 			
 			if(packet == null) {
-				synchronized (lock) {
-					lock.notify();
-				}
-				continue;
+				lock.lock();
+				finished.signal();
+				lock.unlock();
+				break;
 			}
 			
 			if(packet.isRes()) {
@@ -66,17 +72,19 @@ public class SendThread implements Runnable{
 			}
 			
 			try {
-				synchronized(this) {	
-					for(int i = 0; i < dot.getTries(); i++) {
-						dot.getSocket().send(packet);
-						lost++;
-						this.wait(dot.getTimeout());
-						if(this.ack != null) {
-							lost--;
-							break;
-						}
+				lock.lock();
+				
+				for(int i = 0; i < dot.getTries(); i++) {
+					dot.getSocket().send(packet);
+					lost++;
+					ackReceived.await(dot.getTimeout(), TimeUnit.MILLISECONDS);
+					if(this.ack != null) {
+						lost--;
+						break;
 					}
 				}
+				
+				lock.unlock();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -90,14 +98,11 @@ public class SendThread implements Runnable{
 	}
 	
 	public void setAck(Packet ack) {
+		lock.lock();
+		
 		this.ack = ack;
-	}
-	
-	public Packet getPacket() {
-		return this.packet;
-	}
-	
-	public Thread getThread() {
-		return this.thread;
+		ackReceived.signal();
+		
+		lock.unlock();
 	}
 }

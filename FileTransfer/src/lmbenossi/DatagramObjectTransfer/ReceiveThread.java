@@ -5,10 +5,11 @@ import java.net.SocketAddress;
 public class ReceiveThread implements Runnable {
 	private DatagramObjectTransfer dot;
 	Thread thread;
-	PacketQueue queue = new PacketQueue();
+	OrderedPacketQueue queue;
 	
 	public ReceiveThread(DatagramObjectTransfer dot) {
 		this.dot = dot;
+		this.queue = new OrderedPacketQueue(0);
 	}
 	
 	public void start() {
@@ -21,8 +22,6 @@ public class ReceiveThread implements Runnable {
 	}
 	
 	public void run () {
-		int lastReceivedSeq = 0;
-		
 		while(true) {
 			try {
 				Packet received = dot.getSocket().receive();
@@ -33,33 +32,25 @@ public class ReceiveThread implements Runnable {
 						Packet ack = PacketFactory.createSynAckPacket(dot.getSeq(), peerAddress, received.getSeq());
 						dot.getSocket().send(ack);
 						dot.setState(SocketState.READY);
-						lastReceivedSeq = received.getSeq();
 						dot.setPeerAddress(peerAddress);
 						dot.notify();
 					}
 				}
-				else if(received.isSyn() && received.isAck() && dot.getState().equals(SocketState.SYN_SENT) && received.getAckseq() == dot.getConnectThread().getSyn().getSeq()) {
+				else if(received.isSyn() && received.isAck() && dot.getState().equals(SocketState.SYN_SENT)) {
 					dot.getConnectThread().setAck(received);
 				}
 				else if(received.isData() && !received.isAck() && dot.getState().equals(SocketState.READY)) {
 					Packet ack = PacketFactory.createDataAckPacket(dot.getSeq(), dot.getPeerAddress(), received.getSeq());
 					
 					dot.getSocket().send(ack);
-					
-					if(received.getSeq() > lastReceivedSeq) {
-						lastReceivedSeq = received.getSeq();
-						queue.put(received);
-					}
+										
+					queue.put(received);
 				}
-				else if(received.isData() && received.isAck() && dot.getState().equals(SocketState.READY) && received.getAckseq() == dot.getSendThread().getPacket().getSeq()) {
-					SendThread sendThread = dot.getSendThread();
-					synchronized(sendThread) {
-						sendThread.setAck(received);
-						sendThread.notify();
-					}
+				else if(received.isData() && received.isAck() && dot.getState().equals(SocketState.READY)) {
+					dot.getSendMultiplexer().setAck(received);
 				}
 				else if(received.isRes()) {
-					dot.getSendThread().stop();
+					dot.getSendMultiplexer().stop();
 					dot.setState(SocketState.CLOSED);
 					break;
 				}

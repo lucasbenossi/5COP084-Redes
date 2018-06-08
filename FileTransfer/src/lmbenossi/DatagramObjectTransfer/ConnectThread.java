@@ -6,7 +6,6 @@ public class ConnectThread implements Runnable {
 	private DatagramObjectTransfer dot;
 	private Packet syn;
 	private Packet ack;
-	private Object lock = new Object();
 	
 	public ConnectThread(DatagramObjectTransfer dot) {
 		this.dot = dot;
@@ -31,11 +30,11 @@ public class ConnectThread implements Runnable {
 	public void run() {
 		int lost = 0;
 		try {
-			synchronized(lock) {	
+			synchronized(this) {	
 				for(int i = 0; i < dot.getTries(); i++) {
 					dot.getSocket().send(this.syn);
 					lost++;
-					lock.wait(dot.getTimeout());
+					this.wait(dot.getTimeout());
 					if(this.ack != null) {
 						lost--;
 						break;
@@ -48,14 +47,10 @@ public class ConnectThread implements Runnable {
 		Globals.incrementLostPackets(lost);
 	}
 	
-	public void setAck(Packet ack) {
-		synchronized (lock) {			
-			this.ack = ack;
-			lock.notify();
+	public synchronized void setAck(Packet ack) {
+		this.ack = ack;
+		if (this.ack.getAckseq() == this.syn.getSeq()) {
+			this.notify();
 		}
-	}
-	
-	public Packet getSyn() {
-		return this.syn;
 	}
 }

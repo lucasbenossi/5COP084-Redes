@@ -20,10 +20,11 @@ public class PacketFactory {
 		packet.setRes();
 		return packet;
 	}
-	public static Packet createDataPacket(int seq, SocketAddress peerAddress, Object object) {
+	public static Packet createDataPacket(int seq, SocketAddress peerAddress, Object object, int dataseq) {
 		Packet packet = new Packet(seq, peerAddress);
 		packet.setData();
 		packet.setObejct(object);
+		packet.setDataseq(dataseq);
 		return packet;
 	}
 	public static Packet createDataAckPacket(int seq, SocketAddress peerAddress, int ackseq) {

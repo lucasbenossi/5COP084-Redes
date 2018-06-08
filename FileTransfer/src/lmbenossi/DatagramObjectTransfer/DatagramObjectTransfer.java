@@ -12,8 +12,9 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 	private SocketAddress peerAddress;
 	private SocketState state;
 	private int seq = 0;
+	private int dataseq = -1;
 	private ReceiveThread receiveThread = new ReceiveThread(this);
-	private SendThread sendThread = new SendThread(this);
+	private SendMultiplexer sendMultiplexer = new SendMultiplexer(this);
 	private ConnectThread connectThread = new ConnectThread(this);
 	private int timeout = 2000;
 	private int tries = 3;
@@ -41,7 +42,7 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		this.sendThread.start();
+		this.sendMultiplexer.start();
 	}
 	
 	@Override
@@ -61,15 +62,15 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 			return false;
 		}
 		setState(SocketState.READY);
-		this.sendThread.start();
+		this.sendMultiplexer.start();
 		return true;
 	}
 
 	@Override
 	public boolean send(Object object) {
-		Packet packet = PacketFactory.createDataPacket(getSeq(), peerAddress, object);
+		Packet packet = PacketFactory.createDataPacket(getSeq(), peerAddress, object, getDataseq());
 		
-		return sendThread.send(packet);
+		return sendMultiplexer.send(packet);
 	}
 
 	@Override
@@ -83,7 +84,7 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 		Packet resRemote = PacketFactory.createResPacket(seq, peerAddress);
 		Packet resLocal = PacketFactory.createResPacket(seq, socket.getLocalSocketAddress());
 		
-		this.sendThread.waitToFinish();
+		this.sendMultiplexer.waitToFinish();
 		
 		setState(SocketState.RES_SENT);
 		
@@ -128,12 +129,17 @@ public class DatagramObjectTransfer implements ObjectTransfer {
 		return seq;
 	}
 	
+	public int getDataseq() {
+		dataseq++;
+		return dataseq;
+	}
+	
 	public ReceiveThread getReceiveThread() {
 		return this.receiveThread;
 	}
 	
-	public SendThread getSendThread() {
-		return this.sendThread;
+	public SendMultiplexer getSendMultiplexer() {
+		return this.sendMultiplexer;
 	}
 	
 	public ConnectThread getConnectThread() {

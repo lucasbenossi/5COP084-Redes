@@ -42,6 +42,7 @@ public class Receiver {
 					break;
 				}
 				fos.write(fragment.getData());
+				System.out.println("Written " + fragment.toString());
 				if(fragment.getNum() == fragment.getTotal()) {
 					break;
 				}

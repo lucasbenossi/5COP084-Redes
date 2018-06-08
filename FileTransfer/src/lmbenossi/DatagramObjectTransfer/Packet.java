@@ -12,6 +12,7 @@ public class Packet implements Serializable {
 	private boolean ack;
 	private Object object;
 	private int ackseq;
+	private int dataseq;
 	
 	public Packet(int seq, SocketAddress peerAddress) {
 		this.seq = seq;
@@ -22,6 +23,7 @@ public class Packet implements Serializable {
 		this.ack = false;
 		this.object = null;
 		this.ackseq = 0;
+		this.dataseq = 0;
 	}
 	
 	public int getSeq() {
@@ -89,6 +91,13 @@ public class Packet implements Serializable {
 		this.ackseq = ackseq;
 	}
 	
+	public int getDataseq() {
+		return this.dataseq;
+	}
+	public void setDataseq(int dataseq) {
+		this.dataseq = dataseq;
+	}
+	
 	@Override
 	public String toString() {
 		String string = new String();
@@ -96,22 +105,28 @@ public class Packet implements Serializable {
 		if(isSyn() && !isAck()) {
 			string += "SYN ";
 		}
-		if(isSyn() && isAck()) {
+		else if(isSyn() && isAck()) {
 			string += "SYN-ACK ";
 		}
-		if(isRes()) {
+		else if(isRes()) {
 			string += "RES ";
 		}
-		if(isData() && !isAck()) {
+		else if(isData() && !isAck()) {
 			string += "DATA ";
 		}
-		if(isData() && isAck()) {
+		else if(isData() && isAck()) {
 			string += "DATA-ACK ";
 		}
+		
 		string += "seq=" + getSeq() + " ";
+		
 		if(isAck()) {
 			string += "ackseq=" + getAckseq() + " ";
 		}
+		else if(isData()) {
+			string += "dataseq=" + getDataseq() + " ";
+		}
+		
 		if(getObject() != null) {
 			string += getObject().toString();
 		}
