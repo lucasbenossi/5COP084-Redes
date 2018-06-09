@@ -3,26 +3,27 @@ package lmbenossi.ArgsParser;
 import java.util.ArrayList;
 
 public class Parser {
-	private static ArrayList<String> argsList = new ArrayList<>();
+	private static ArrayList<String> argl = null;
 	
 	public static void parse(String[] argv) {
+		Parser.argl = new ArrayList<>(argv.length);
+		
 		for(String arg : argv) {
-			argsList.add(arg);
+			argl.add(arg);
 		}
 		
 		for(Arg arg : Arg.values()) {
-			int i = argsList.indexOf(arg.toString());
+			int i = argl.indexOf(arg.toString());
 			if(i != -1) {
+				argl.remove(i);
 				if(arg.isBoolean()) {
 					arg.set();
 				}
 				else if(arg.isString() || arg.isInteger()) {
-					int j = i + 1;
-					if(j < argsList.size() && ! argsList.get(j).startsWith("-")) {
-						arg.set(argsList.remove(j));
+					if(i < argl.size() && ! argl.get(i).startsWith("-")) {
+						arg.set(argl.remove(i));
 					}
 				}
-				argsList.remove(i);
 			}
 		}
 	}
@@ -37,8 +38,8 @@ public class Parser {
 			ok = Arg.FILE.isSet();
 		}
 		
-		if(!argsList.isEmpty()) {
-			for(String arg : argsList) {
+		if(!argl.isEmpty()) {
+			for(String arg : argl) {
 				if(arg.startsWith("-")) {
 					System.err.println("Parametro não reconhecido: " + arg);
 				}

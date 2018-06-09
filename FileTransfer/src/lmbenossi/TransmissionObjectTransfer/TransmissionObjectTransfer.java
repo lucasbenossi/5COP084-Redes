@@ -16,7 +16,7 @@ public class TransmissionObjectTransfer implements ObjectTransfer {
 	ObjectInputStream ois;
 	ObjectOutputStream oos;
 	
-	public TransmissionObjectTransfer(int port) throws IOException {
+	public TransmissionObjectTransfer(int port) {
 		this.peerAddress = null;
 		this.port = port;
 	}

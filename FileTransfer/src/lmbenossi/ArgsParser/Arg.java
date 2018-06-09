@@ -60,7 +60,6 @@ public enum Arg {
 	public boolean isSet(){
 		return this.set;
 	}
-	
 	public String getValue() {
 		return this.value;
 	}
