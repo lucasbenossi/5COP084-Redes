@@ -1,7 +1,6 @@
 package lmbenossi.truco;
 
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -15,13 +14,18 @@ import com.google.gson.JsonParser;
 public class Main {
 	public static void main(String[] args) {
 		JsonParser parser = new JsonParser();
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+//		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		Scanner stdIn = new Scanner(System.in);
+		
+		System.out.print("Insira o ip do servidor: ");
+		String host = stdIn.nextLine();
+		System.out.println();
 		
 		try {
-			Socket socket = new Socket("187.18.122.147", 2000);
+			Socket socket = new Socket(host, 2000);
 			Scanner tcpIn = new Scanner(socket.getInputStream());
 			PrintStream tcpOut = new PrintStream(socket.getOutputStream(), true);
-			Scanner stdIn = new Scanner(System.in);
+			
 			int id = Integer.parseInt(tcpIn.nextLine());
 			
 			while(tcpIn.hasNextLine()) {
@@ -35,12 +39,18 @@ public class Main {
 					}
 				}
 				
+				System.out.println("Score:");
+				System.out.println("\tTentos: " + player.get("Tentos").toString());
+				System.out.println("\tMãos: " + player.get("Maos").toString());
+				System.out.println("Mesa: " + Card.toString(object.get("TableCards").getAsJsonArray()));
+				System.out.println("Cartas: " + Card.toString(player.get("Cards").getAsJsonArray()));
+				
 				if(player.get("Active").getAsBoolean()) {
-					JsonArray cards = player.get("Cards").getAsJsonArray();
-					System.out.println(gson.toJson(cards));
-					System.out.println("Insira a jogada");
-					tcpOut.println(stdIn.nextLine());
+					System.out.print("Insira a jogada: ");
+					tcpOut.println(stdIn.nextInt() - 1);
 				}
+				
+				System.out.println();
 			}
 			
 			stdIn.close();
