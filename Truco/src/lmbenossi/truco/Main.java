@@ -4,6 +4,8 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.util.Scanner;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -27,8 +29,11 @@ public class Main {
 			int id = Integer.parseInt(tcpIn.nextLine());
 			
 			while(tcpIn.hasNextLine()) {
+//				Gson gson = new GsonBuilder().setPrettyPrinting().create();
 				String json = tcpIn.nextLine();
 				JsonObject object = parser.parse(json).getAsJsonObject();
+//				String pretty = gson.toJson(object);
+//				System.err.println(pretty);
 				JsonArray playerStates = object.get("PlayerStates").getAsJsonArray();
 				System.out.println("Score\tPlayer\tTentos\tMãos");
 				JsonObject player = null;
